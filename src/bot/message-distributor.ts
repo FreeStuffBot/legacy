@@ -176,12 +176,12 @@ export default class MessageDistributor {
     }
 
     // only once per month - maybe redis entry to save last month and if unequal to current month, do this?
-    const donationNotice = !test && Experiments.runExperimentOnServer('show_donation_notice', data)
+    // const donationNotice = !test && Experiments.runExperimentOnServer('show_donation_notice', data)
 
     // build message objects
     // TODO BIG TODO, types dont match with messagePayload - SCHEINT EGAL ZU SEIN LETSGOOOOOOOooooooooo........
-    const messagePayload = MessageDistributor.buildMessage(content, data, test, donationNotice)
-    if (!messagePayload.content) delete messagePayload.content
+    // const messagePayload = MessageDistributor.buildMessage(content, data, test, donationNotice)
+    // if (!messagePayload.content) delete messagePayload.content
 
     const useWebhooks = true
     if (useWebhooks) {
@@ -195,6 +195,15 @@ export default class MessageDistributor {
         // if (res === 'invalid')
         //   createNew = true
         return
+      } else if (content[0]?.title === 'final_warning') {
+        channel.send({
+          embeds: [
+            {
+              title: 'Final Notice',
+              description: ':warning: **As warned multiple times before the bot will now stop sending games to your Discord server as it is still missing permissions to manage webhooks.**\nPlease grant those permissions and then go through /settings to select this channel again. This last step is now mandatory due to technical limitations.\nPlease take a minute to resolve this to continue receiving free games! Have a great day!'
+            }
+          ]
+        })
       } else {
         createNew = true
       }
