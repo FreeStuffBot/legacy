@@ -125,10 +125,10 @@ export default class MessageDistributor {
 
     // forced will ignore filter settings
     if (!force) {
-      content = content
-        .filter(game => data.price.from <= (game.org_price[data.currency.code] || game.org_price.euro))
-        .filter(game => data.trashGames || !(game.flags & GameFlag.TRASH))
-        .filter(game => data.platformsList.includes(Const.platforms.find(p => p.id === game.store) || Const.platforms[0]))
+      // content = content
+      //   .filter(game => data.price.from <= (game.org_price[data.currency.code] || game.org_price.euro))
+      //   .filter(game => data.trashGames || !(game.flags & GameFlag.TRASH))
+      //   .filter(game => data.platformsList.includes(Const.platforms.find(p => p.id === game.store) || Const.platforms[0]))
 
       if (!content.length) {
         Logger.excessive(`Guild ${g._id} return: no content left`)
@@ -183,17 +183,18 @@ export default class MessageDistributor {
     const messagePayload = MessageDistributor.buildMessage(content, data, test, donationNotice)
     if (!messagePayload.content) delete messagePayload.content
 
-    const useWebhooks = Experiments.runExperimentOnServer('webhook_migration', data)
+    const useWebhooks = true
     if (useWebhooks) {
       let createNew = false
 
       if (data.webhook) {
-        let res = await this.sendWebhook(data, messagePayload)
+        // let res = await this.sendWebhook(data, messagePayload)
 
-        if (res === 'retry')
-          res = await this.sendWebhook(data, messagePayload)
-        if (res === 'invalid')
-          createNew = true
+        // if (res === 'retry')
+        //   res = await this.sendWebhook(data, messagePayload)
+        // if (res === 'invalid')
+        //   createNew = true
+        return
       } else {
         createNew = true
       }
@@ -202,38 +203,39 @@ export default class MessageDistributor {
         const hook = await this.createWebhook(data, channel, true)
         if (hook) {
           DatabaseManager.changeSetting(data, 'webhook', `${hook.id}/${hook.token}`)
-          await hook.send({ ...messagePayload as any, username: Localisation.getLine(data, 'announcement_header') })
+          // await hook.send({ ...messagePayload as any, username: Localisation.getLine(data, 'announcement_header') })
+          Logger.process('Done')
         } else if (test) {
           // if it is a test message, tell them to give more permissions!
 
-          channel.send({
-            embeds: [ {
-              title: Localisation.getLine(data, hook === false ? 'webhook_migration_failed_too_many_hooks_1' : 'webhook_migration_failed_missing_permissions_1'),
-              description: Localisation.getLine(data, hook === false ? 'webhook_migration_failed_too_many_hooks_2' : 'webhook_migration_failed_missing_permissions_2'),
-              color: Const.embedDefaultColor
-            } ]
-          })
+          // channel.send({
+          //   embeds: [ {
+          //     title: Localisation.getLine(data, hook === false ? 'webhook_migration_failed_too_many_hooks_1' : 'webhook_migration_failed_missing_permissions_1'),
+          //     description: Localisation.getLine(data, hook === false ? 'webhook_migration_failed_too_many_hooks_2' : 'webhook_migration_failed_missing_permissions_2'),
+          //     color: Const.embedDefaultColor
+          //   } ]
+          // })
         } else {
           // if it's not a test message, announce the game the old way
 
-          if (messagePayload.embeds) {
-            messagePayload.embeds.push({
-              color: Const.embedDefaultColor,
-              description: '⚠️ ' + Localisation.getLine(data, 'webhook_migration_notice')
-            })
-          } else {
-            messagePayload.content += '\n\n⚠️ ' + Localisation.getLine(data, 'webhook_migration_notice')
-          }
+          // if (messagePayload.embeds) {
+          //   messagePayload.embeds.push({
+          //     color: Const.embedDefaultColor,
+          //     description: '⚠️ ' + Localisation.getLine(data, 'webhook_migration_notice')
+          //   })
+          // } else {
+          //   messagePayload.content += '\n\n⚠️ ' + Localisation.getLine(data, 'webhook_migration_notice')
+          // }
 
-          const message = await channel.send(messagePayload as any)
-          if (message && data.react && permissions.has('ADD_REACTIONS') && permissions.has('READ_MESSAGE_HISTORY'))
-            await message.react('🆓')
+          // const message = await channel.send(messagePayload as any)
+          // if (message && data.react && permissions.has('ADD_REACTIONS') && permissions.has('READ_MESSAGE_HISTORY'))
+          //   await message.react('🆓')
         }
       }
     } else {
-      const message = await channel.send(messagePayload as any)
-      if (message && data.react && permissions.has('ADD_REACTIONS') && permissions.has('READ_MESSAGE_HISTORY'))
-        await message.react('🆓')
+      // const message = await channel.send(messagePayload as any)
+      // if (message && data.react && permissions.has('ADD_REACTIONS') && permissions.has('READ_MESSAGE_HISTORY'))
+      //   await message.react('🆓')
     }
 
     // if (!test && (data.channelInstance as Channel).type === 'news')
@@ -258,25 +260,25 @@ export default class MessageDistributor {
 
   public static async sendWebhook(data: GuildData, payload: InteractionApplicationCommandCallbackData): Promise<WebhookSendStatus> {
     try {
-      const { status } = await axios.post(
-        `https://discordapp.com/api/webhooks/${data.webhook}`,
-        {
-          ...payload,
-          username: Localisation.text(data, '=announcement_header'),
-          avatar_url: Const.brandIcons.regularRound
-        },
-        {
-          validateStatus: null
-        }
-      )
+      // const { status } = await axios.post(
+      //   `https://discordapp.com/api/webhooks/${data.webhook}`,
+      //   {
+      //     ...payload,
+      //     username: Localisation.text(data, '=announcement_header'),
+      //     avatar_url: Const.brandIcons.regularRound
+      //   },
+      //   {
+      //     validateStatus: null
+      //   }
+      // )
 
-      if (status >= 200 && status < 300)
-        return 'success'
+      // if (status >= 200 && status < 300)
+      //   return 'success'
 
-      // TODO add reaction
+      // // TODO add reaction
 
-      if (status === 404)
-        return 'invalid'
+      // if (status === 404)
+      //   return 'invalid'
 
       Logger.warn(`Webhook send failed with status ${status}`)
 
@@ -304,15 +306,16 @@ export default class MessageDistributor {
       if (hook) return hook
     }
 
-    const member = channel.guild.members.resolve(Core.user.id)
-    if (!channel.permissionsFor(member).has('MANAGE_WEBHOOKS'))
-      return null
+    // const member = channel.guild.members.resolve(Core.user.id)
+    // if (!channel.permissionsFor(member).has('MANAGE_WEBHOOKS'))
+    //   return null
 
     try {
       const hook = await channel.createWebhook('FreeStuff', {
         avatar: Const.brandIcons.regularRound,
         reason: Localisation.getLine(data, 'webhook_create_auditlog_reason')
       })
+      await new Promise(res => setTimeout(res, 2000))
 
       return hook ?? null
     } catch (ex) {
