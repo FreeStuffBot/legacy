@@ -1,4 +1,7 @@
 
+> This repo contains the source code for the old FreeStuff Bot for Discord, based on discord.js. This codebase has been deprecated and remains readonly.
+
+
 # FreeStuff Bot
 
 [https://freestuffbot.xyz/](https://freestuffbot.xyz/)
